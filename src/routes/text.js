@@ -6,6 +6,7 @@ import NOTES_PROMPT from "../prompt/notes.js";
 import FLASH_CARD_PROMPT from "../prompt/flashCard.js";
 import INFO_GRAPHICS_PROMPT from "../prompt/infoGraphics.js";
 import generateText from "../ai/generateText.js";
+import KEY_POINTS_PROMPT from "../prompt/keyPoints.js";
 
 const router = express.Router();
 
@@ -66,7 +67,7 @@ router.post("/process", async (req, res) => {
     result.result = response.text;
     const item = new Item(result);
     await item.save();
-    res.send(response.text);
+    res.send(result);
   }
 });
 

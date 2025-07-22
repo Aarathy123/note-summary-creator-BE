@@ -53,7 +53,7 @@ router.post("/process", async (req, res) => {
     await uploadToSpaces(imageBuffer, fileName, "image/png");
     result.resultUrl = [`https://${
         process.env.BUCKET_NAME
-      }.nyc3.digitaloceanspaces.com/${encodeURIComponent(imageName)}`];
+      }.nyc3.digitaloceanspaces.com/${encodeURIComponent(fileName)}`];
     const item = new Item(result);
     await item.save();
     res.send(result);

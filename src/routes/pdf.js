@@ -9,42 +9,50 @@ import generateImage from "../ai/generateImage.js";
 import FLASH_CARD_PROMPT from "../prompt/flashCard.js";
 import INFO_GRAPHICS_PROMPT from "../prompt/infoGraphics.js";
 import KEY_POINTS_PROMPT from "../prompt/keyPoints.js";
-import smartSummary from "../ai/generateText.js";
 import generateText from "../ai/generateText.js";
 import SOCIAL_MEDIA_POST_PROMPT from "../prompt/socialMediaPost.js";
 
 const router = express.Router();
-const upload = multer({ dest: "uploads/", storage: multer.memoryStorage() });
+const upload = multer({ limits: {
+  fileSize: 5 * 1024 * 1024 // 5MB
+} });
 
-router.post("/process", upload.single("pdf"), async (req, res) => {
-  const { prompt, type } = req.body;
+router.post("/process",  upload.single("file"), async (req, res) => {
   try {
+    const { type } = req.body;
+    if (!type) {
+      return res.status(400).send("Type is required");
+    }
+    
+    if (!req.file) {
+      return res.status(400).send("File is required");
+    }
+    
     const buffer = req.file.buffer;
     const base64Pdf = buffer.toString("base64");
     let response;
-    const contents = `${FILE_SUMMARY_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
+    const contents = `${FILE_SUMMARY_PROMPT} """${base64Pdf}"""`;
     response = await generateText(contents);
     if (type === "visual-notes") {
-      const contents = `${NOTES_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${response}"""`;
+      const contents = `${NOTES_PROMPT} """${response}"""`;
       response = await generateImage(contents);
     } else if (type === "flash-cards") {
-      const contents = `${FLASH_CARD_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${response}"""`;
+      const contents = `${FLASH_CARD_PROMPT} """${response}"""`;
       response = await generateImage(contents, 2);
     } else if (type === "info-graphics") {
-      const contents = `${INFO_GRAPHICS_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${response}"""`;
+      const contents = `${INFO_GRAPHICS_PROMPT} """${response}"""`;
       response = await generateImage(contents);
     } else if (type === "key-points") {
-      const contents = `${KEY_POINTS_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
+      const contents = `${KEY_POINTS_PROMPT} """${response}"""`;
       response = await generateText(contents);
     } else if (type === "social-media-post") {
-      const contents = `${SOCIAL_MEDIA_POST_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
+      const contents = `${SOCIAL_MEDIA_POST_PROMPT} """${response}"""`;
       response = await generateText(contents);
     }
     const fileName = `${Date.now()}-${req.file.originalname}`;
     await uploadToSpaces(buffer, fileName, req.file.mimetype);
     const result = {
       type,
-      prompt: prompt,
       inputUrl: `https://${
         process.env.BUCKET_NAME
       }.nyc3.digitaloceanspaces.com/${encodeURIComponent(fileName)}`,
