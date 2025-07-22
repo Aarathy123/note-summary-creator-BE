@@ -11,7 +11,12 @@ const itemSchema = new mongoose.Schema({
     default: "",
     required: false,
   },
-  url: {
+  input: {
+    type: String,
+    default: "",
+    required: false,
+  },
+  inputUrl: {
     type: String,
     default: "",
     required: false,
@@ -22,8 +27,8 @@ const itemSchema = new mongoose.Schema({
     required: false,
   },
   resultUrl: {
-    type: String,
-    default: "",
+    type: [String],
+    default: [],
     required: false,
   },
 }, { timestamps: true });

@@ -13,6 +13,8 @@ The pdf content you need to convert into visual notes is enclosed in """
 
 Summarize the content of the pdf to less than 100 words initially and then convert it into visual notes.
 
+IMPORTANT:The aspect ratio of the visual notes should be 16:9.
+
 Consider the prompt enclosed in <>`;
 
 export default NOTES_PROMPT;

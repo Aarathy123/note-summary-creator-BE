@@ -8,7 +8,7 @@ const router = express.Router();
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-router.post("/process-text", async (req, res) => {
+router.post("/process", async (req, res) => {
   const { text, prompt } = req.body;
   const contents = `${TEXT_SUMMARY_PROMPT} <>${prompt}<> """${text}"""`;
   const response = await ai.models.generateContent({
@@ -16,9 +16,10 @@ router.post("/process-text", async (req, res) => {
     contents: contents,
   });
   const item = new Item({
-    type: "text",
-    value: text,
-    summary: response.text,
+    type: "smart-summary",
+    prompt: prompt,
+    input: text,
+    result: response.text,
   });
   await item.save();
   res.send(response.text);
