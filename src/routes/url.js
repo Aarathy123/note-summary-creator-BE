@@ -8,6 +8,7 @@ import uploadToSpaces from "../storage/client.js";
 import INFO_GRAPHICS_PROMPT from "../prompt/infoGraphics.js";
 import generateText from "../ai/generateText.js";
 import KEY_POINTS_PROMPT from "../prompt/keyPoints.js";
+import SOCIAL_MEDIA_POST_PROMPT from "../prompt/socialMediaPost.js";
 
 const router = express.Router();
 
@@ -32,6 +33,10 @@ router.post("/process", async (req, res) => {
   }
   if (type === "key-points") {
     const contents = `${KEY_POINTS_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${url}"""`;
+    response = await generateText(contents);
+  }
+  if (type === "social-media-post") {
+    const contents = `${SOCIAL_MEDIA_POST_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${url}"""`;
     response = await generateText(contents);
   }
   const result = {
@@ -72,8 +77,14 @@ router.post("/process", async (req, res) => {
       }
     })
   }
-  if (type === "smart-summary" || type === "key-points") {
+  if (type === "smart-summary") {
     result.result = response.candidates[0].content.parts[0].text;
+    const item = new Item(result);
+    await item.save();
+    res.send(result);
+  }
+  if (type === "key-points" || type === "social-media-post") {
+    result.result = response;
     const item = new Item(result);
     await item.save();
     res.send(result);

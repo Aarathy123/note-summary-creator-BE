@@ -11,6 +11,7 @@ import INFO_GRAPHICS_PROMPT from "../prompt/infoGraphics.js";
 import KEY_POINTS_PROMPT from "../prompt/keyPoints.js";
 import smartSummary from "../ai/generateText.js";
 import generateText from "../ai/generateText.js";
+import SOCIAL_MEDIA_POST_PROMPT from "../prompt/socialMediaPost.js";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/", storage: multer.memoryStorage() });
@@ -21,20 +22,22 @@ router.post("/process", upload.single("pdf"), async (req, res) => {
     const buffer = req.file.buffer;
     const base64Pdf = buffer.toString("base64");
     let response;
-    if (type === "smart-summary") {
-      const contents = `${FILE_SUMMARY_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
-      response = await generateText(contents);
-    } else if (type === "visual-notes") {
-      const contents = `${NOTES_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
+    const contents = `${FILE_SUMMARY_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
+    response = await generateText(contents);
+    if (type === "visual-notes") {
+      const contents = `${NOTES_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${response}"""`;
       response = await generateImage(contents);
     } else if (type === "flash-cards") {
-      const contents = `${FLASH_CARD_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
+      const contents = `${FLASH_CARD_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${response}"""`;
       response = await generateImage(contents, 2);
     } else if (type === "info-graphics") {
-      const contents = `${INFO_GRAPHICS_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
+      const contents = `${INFO_GRAPHICS_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${response}"""`;
       response = await generateImage(contents);
     } else if (type === "key-points") {
       const contents = `${KEY_POINTS_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
+      response = await generateText(contents);
+    } else if (type === "social-media-post") {
+      const contents = `${SOCIAL_MEDIA_POST_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
       response = await generateText(contents);
     }
     const fileName = `${Date.now()}-${req.file.originalname}`;
@@ -75,12 +78,11 @@ router.post("/process", upload.single("pdf"), async (req, res) => {
         }
       })
     }
-    if (type === "smart-summary" || type === "key-points") {
+    if (type === "smart-summary" || type === "key-points" || type === "social-media-post") {
       result.result = response;
       const item = new Item(result);
       await item.save();
       res.send(result);
-    
     }
   } catch (error) {
     console.error("Error processing PDF:", error);
