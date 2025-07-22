@@ -6,6 +6,8 @@ import NOTES_PROMPT from "../prompt/notes.js";
 import generateImage from "../ai/generateImage.js";
 import uploadToSpaces from "../storage/client.js";
 import INFO_GRAPHICS_PROMPT from "../prompt/infoGraphics.js";
+import generateText from "../ai/generateText.js";
+import KEY_POINTS_PROMPT from "../prompt/keyPoints.js";
 
 const router = express.Router();
 
@@ -15,7 +17,7 @@ router.post("/process", async (req, res) => {
   let response;
   if (type === "smart-summary") {
     const contents = `${URL_SUMMARY_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${url}"""`;
-    response = await smartSummary(contents);
+    response = await generateText(contents);
   } else if (type === "visual-notes") {
     const contents = `${NOTES_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${url}"""`;
     response = await generateImage(contents);
@@ -27,6 +29,10 @@ router.post("/process", async (req, res) => {
   if (type === "info-graphics") {
     const contents = `${INFO_GRAPHICS_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${url}"""`;
     response = await generateImage(contents);
+  }
+  if (type === "key-points") {
+    const contents = `${KEY_POINTS_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${url}"""`;
+    response = await generateText(contents);
   }
   const result = {
     type,
@@ -66,7 +72,7 @@ router.post("/process", async (req, res) => {
       }
     })
   }
-  if (type === "smart-summary") {
+  if (type === "smart-summary" || type === "key-points") {
     result.result = response.candidates[0].content.parts[0].text;
     const item = new Item(result);
     await item.save();

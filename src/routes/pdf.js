@@ -8,6 +8,9 @@ import NOTES_PROMPT from "../prompt/notes.js";
 import generateImage from "../ai/generateImage.js";
 import FLASH_CARD_PROMPT from "../prompt/flashCard.js";
 import INFO_GRAPHICS_PROMPT from "../prompt/infoGraphics.js";
+import KEY_POINTS_PROMPT from "../prompt/keyPoints.js";
+import smartSummary from "../ai/generateText.js";
+import generateText from "../ai/generateText.js";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/", storage: multer.memoryStorage() });
@@ -20,7 +23,7 @@ router.post("/process", upload.single("pdf"), async (req, res) => {
     let response;
     if (type === "smart-summary") {
       const contents = `${FILE_SUMMARY_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
-      response = await smartSummary(contents);
+      response = await generateText(contents);
     } else if (type === "visual-notes") {
       const contents = `${NOTES_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
       response = await generateImage(contents);
@@ -30,6 +33,9 @@ router.post("/process", upload.single("pdf"), async (req, res) => {
     } else if (type === "info-graphics") {
       const contents = `${INFO_GRAPHICS_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
       response = await generateImage(contents);
+    } else if (type === "key-points") {
+      const contents = `${KEY_POINTS_PROMPT} ${prompt ? `<>${prompt}<>` : ""} """${base64Pdf}"""`;
+      response = await generateText(contents);
     }
     const fileName = `${Date.now()}-${req.file.originalname}`;
     await uploadToSpaces(buffer, fileName, req.file.mimetype);
@@ -69,7 +75,7 @@ router.post("/process", upload.single("pdf"), async (req, res) => {
         }
       })
     }
-    if (type === "smart-summary") {
+    if (type === "smart-summary" || type === "key-points") {
       result.result = response;
       const item = new Item(result);
       await item.save();

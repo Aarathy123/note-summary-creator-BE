@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const smartSummary = async (text) => {
+const generateText = async (text) => {
   const response = await ai.models.generateContent({
     model: "gemini-2.5-pro",
     contents: text,
@@ -8,4 +8,4 @@ const smartSummary = async (text) => {
   return response.text;
 };
 
-export default smartSummary;
+export default generateText;
